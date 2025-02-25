@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project aims to use machine learning techniques to generate and evaluate SMILES (Simplified Molecular Input Line Entry System) strings for potential singlet fission materials. Singlet fission is a process where a singlet exciton splits into two triplet excitons, which can potentially double the efficiency of solar cells.
+This project aims to use machine learning techniques to generate and evaluate molecular structures for potential singlet fission materials. Singlet fission is a process where a singlet exciton splits into two triplet excitons, which can potentially double the efficiency of solar cells.
 
 ## Project Structure
 
