@@ -4,7 +4,6 @@ import pandas as pd
 from rdkit import Chem
 from tqdm import tqdm
 import random
-import matplotlib.pyplot as plt
 from utils.dataset import SMILESDataset
 from models.clm_model import CLM
 from utils.train_utils import train_model, generate_smiles, evaluate_model
@@ -31,26 +30,6 @@ def load_augmented_data(filepath):
     except FileNotFoundError:
         logging.error("Augmented dataset not found. Please check the file path and ensure the file exists.")
         return []
-
-def plot_learning_curves(train_losses, val_losses, title, filename):
-    plt.figure(figsize=(10, 6))
-    plt.plot(train_losses, label='Training Loss')
-    plt.plot(val_losses, label='Validation Loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.title(title)
-    plt.savefig(filename)
-    plt.show()
-
-def filter_valid_unique_smiles(smiles_list, seen_smiles):
-    valid_smiles = []
-    for smi in smiles_list:
-        mol = Chem.MolFromSmiles(smi)
-        if mol and smi not in seen_smiles:
-            seen_smiles.add(smi)
-            valid_smiles.append(smi)
-    return valid_smiles
 
 def main():
     logging.info("Starting main function")
@@ -81,10 +60,8 @@ def main():
 
     logging.info("Pre-training CLM on combined dataset...")
     clm_model = CLM(vocab_size=len(chars), embed_dim=128, hidden_dim=256, n_layers=3, dropout=0.2).to(device)
-    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=5, batch_size=128, lr=0.001, patience=5)
+    pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=5, batch_size=128, lr=0.001)
     logging.info("CLM pre-training complete")
-
-    plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_learning_curves.png')
 
     logging.info("Loading smaller dataset for fine-tuning...")
     small_dataset = pd.read_csv('data/SMILE.csv')
@@ -93,10 +70,8 @@ def main():
     logging.info(f"Loaded {len(valid_small_smiles)} valid SMILES from smaller dataset")
 
     logging.info("Fine-tuning CLM on smaller dataset...")
-    train_losses, val_losses = finetune_clm(clm_model, valid_small_smiles, char_to_idx, device, epochs=20, batch_size=32, lr=0.0001, patience=5)
+    finetune_clm(clm_model, valid_small_smiles, char_to_idx, device, epochs=20, batch_size=32, lr=0.0001)
     logging.info("CLM fine-tuning complete")
-
-    plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_learning_curves.png')
 
     logging.info("Evaluating CLM...")
     dataset = SMILESDataset(combined_smiles, char_to_idx)
@@ -107,16 +82,21 @@ def main():
     logging.info("Generating new SMILES...")
     new_smiles = [generate_smiles(clm_model, char_to_idx, idx_to_char) for _ in range(5000)]
     logging.info("New SMILES generated")
-    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_20_02_2025.csv', index=False)
-    logging.info("Generated SMILES saved to 'data/generated_smiles_20_02_2025.csv'")
+    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_27_02_2025.csv', index=False)
+    logging.info("Generated SMILES saved to 'data/generated_smiles_27_02_2025.csv'")
 
     logging.info("Filtering valid and unique SMILES...")
+    valid_new_smiles = []
     seen = set(valid_small_smiles)
-    valid_new_smiles = filter_valid_unique_smiles(new_smiles, seen)
+    for smi in new_smiles:
+        mol = Chem.MolFromSmiles(smi)
+        if mol and smi not in seen:
+            seen.add(smi)
+            valid_new_smiles.append(smi)
     logging.info(f"Generated {len(valid_new_smiles)} valid and unique SMILES")
 
-    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_20_02_2025.csv', index=False)
-    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_20_02_2025.csv'")
+    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_27_02_2025.csv', index=False)
+    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_27_02_2025.csv'")
 
 if __name__ == "__main__":
     main()
