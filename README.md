@@ -4,8 +4,6 @@ This project aims to use machine learning techniques to generate and evaluate mo
 
 ## Project Structure
 
-The project is organized into the following main components:
-
 - **Data Augmentation**: This module is responsible for augmenting the dataset of SMILES strings by generating new molecules through various techniques.
 - **Model Training**: This module includes scripts for pre-training and fine-tuning a Character-Level Model (CLM) on the augmented dataset.
 - **Evaluation**: This module evaluates the trained model and generates new SMILES strings.
