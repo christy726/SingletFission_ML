@@ -4,6 +4,7 @@ import pandas as pd
 from rdkit import Chem
 from tqdm import tqdm
 import random
+import matplotlib.pyplot as plt
 from utils.dataset import SMILESDataset
 from models.clm_model import CLM
 from utils.train_utils import train_model, generate_smiles, evaluate_model
@@ -31,6 +32,17 @@ def load_augmented_data(filepath):
         logging.error("Augmented dataset not found. Please check the file path and ensure the file exists.")
         return []
 
+def plot_learning_curves(train_losses, val_losses, title, filename):
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_losses, label='Training Loss')
+    plt.plot(val_losses, label='Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title(title)
+    plt.savefig(f'data/{filename}')
+    plt.show()
+
 def main():
     logging.info("Starting main function")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -40,7 +52,7 @@ def main():
     gdb17_data = pd.read_csv('data/GDB17.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:100000]
+    selected_gdb17_smiles = gdb17_smiles[:1000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
     logging.info(f"Collected {len(valid_gdb17)} valid SMILES from GDB17 dataset")
 
@@ -60,8 +72,10 @@ def main():
 
     logging.info("Pre-training CLM on combined dataset...")
     clm_model = CLM(vocab_size=len(chars), embed_dim=128, hidden_dim=256, n_layers=3, dropout=0.2).to(device)
-    pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=5, batch_size=128, lr=0.001)
+    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=5, batch_size=128, lr=0.001)
     logging.info("CLM pre-training complete")
+
+    plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_learning_curves.png')
 
     logging.info("Loading smaller dataset for fine-tuning...")
     small_dataset = pd.read_csv('data/SMILE.csv')
@@ -70,8 +84,10 @@ def main():
     logging.info(f"Loaded {len(valid_small_smiles)} valid SMILES from smaller dataset")
 
     logging.info("Fine-tuning CLM on smaller dataset...")
-    finetune_clm(clm_model, valid_small_smiles, char_to_idx, device, epochs=20, batch_size=32, lr=0.0001)
+    train_losses, val_losses = finetune_clm(clm_model, valid_small_smiles, char_to_idx, device, epochs=20, batch_size=32, lr=0.0001)
     logging.info("CLM fine-tuning complete")
+
+    plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_learning_curves.png')
 
     logging.info("Evaluating CLM...")
     dataset = SMILESDataset(combined_smiles, char_to_idx)
