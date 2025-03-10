@@ -1,6 +1,6 @@
 # SingletFission_ML
 
-This project aims to use machine learning techniques to generate and evaluate molecular structures for potential singlet fission materials. Singlet fission is a process where a singlet exciton splits into two triplet excitons, which can potentially double the efficiency of solar cells.
+This project aims to use machine learning techniques to generate and evaluate molecular structures for potential singlet fission materials. Singlet fission is a process where a singlet exciton splits into two triplet excitons, which can potentially double the efficiency of solar cells. (All of this is considered as work-in-progress.)
 
 ## Project Structure
 
@@ -13,7 +13,6 @@ This project aims to use machine learning techniques to generate and evaluate mo
 - `main.py`: The main script that orchestrates the entire workflow, including data fetching, augmentation, model training, and evaluation.
 - `Data_Augmentation/Augment.py`: Contains functions for augmenting the dataset by generating new SMILES strings.
 - `Data_Augmentation/smiles.py`: Processes SMILES strings from a smi files and saves them to a CSV file.
-- `utils/chembl_utils.py`: Utility functions for fetching SMILES strings from the ChEMBL database.
 - `utils/dataset.py`: Defines the dataset class for handling SMILES strings.
 - `models/clm_model.py`: Defines the Character-Level Model (CLM) architecture.
 - `utils/train_utils.py`: Utility functions for training and evaluating the model.
