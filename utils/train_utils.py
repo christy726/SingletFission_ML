@@ -50,7 +50,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
 
     return train_losses, val_losses
 
-def generate_smiles(model, char_to_idx, idx_to_char, start_char='C', max_length=100):
+def generate_smiles(model, char_to_idx, idx_to_char, start_char='C', max_length=50):
     model.eval()
     device = next(model.parameters()).device  
     with torch.no_grad():
