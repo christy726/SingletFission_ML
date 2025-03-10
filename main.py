@@ -96,10 +96,10 @@ def main():
     evaluate_model(clm_model, loader, criterion, device)
 
     logging.info("Generating new SMILES...")
-    new_smiles = [generate_smiles(clm_model, char_to_idx, idx_to_char) for _ in range(5000)]
+    new_smiles = [generate_smiles(clm_model, char_to_idx, idx_to_char) for _ in range(2000)]
     logging.info("New SMILES generated")
-    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_27_02_2025.csv', index=False)
-    logging.info("Generated SMILES saved to 'data/generated_smiles_27_02_2025.csv'")
+    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_10_03_2025.csv', index=False)
+    logging.info("Generated SMILES saved to 'data/generated_smiles_10_03_2025.csv'")
 
     logging.info("Filtering valid and unique SMILES...")
     valid_new_smiles = []
@@ -111,8 +111,8 @@ def main():
             valid_new_smiles.append(smi)
     logging.info(f"Generated {len(valid_new_smiles)} valid and unique SMILES")
 
-    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_27_02_2025.csv', index=False)
-    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_27_02_2025.csv'")
+    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_10_03_2025.csv', index=False)
+    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_10_03_2025.csv'")
 
 if __name__ == "__main__":
     main()
