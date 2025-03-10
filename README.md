@@ -1,6 +1,6 @@
 # SingletFission_ML
 
-This project aims to use machine learning techniques to generate and evaluate molecular structures for potential singlet fission materials. Singlet fission is a process where a singlet exciton splits into two triplet excitons, which can potentially double the efficiency of solar cells. (All of this is considered as work-in-progress.)
+This project aims to use machine learning techniques to generate and evaluate molecular structures for potential singlet fission materials. Singlet fission is a process where a singlet exciton splits into two triplet excitons, which can potentially double the efficiency of solar cells. 
 
 ## Project Structure
 
@@ -17,6 +17,7 @@ This project aims to use machine learning techniques to generate and evaluate mo
 - `models/clm_model.py`: Defines the Character-Level Model (CLM) architecture.
 - `utils/train_utils.py`: Utility functions for training and evaluating the model.
 - `utils/clm_utils.py`: Utility functions for pre-training and fine-tuning the CLM.
+(All of this is considered as work-in-progress)
 
 ## Installation
 
