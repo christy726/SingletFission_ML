@@ -5,7 +5,6 @@ from tqdm import tqdm
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs=10):
     train_losses = []
     val_losses = []
-
     model.train()
     for epoch in range(epochs):
         total_loss = 0
@@ -13,20 +12,15 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
         for batch in progress_bar:
             inputs = batch[:, :-1].to(device)
             targets = batch[:, 1:].to(device)
-
             optimizer.zero_grad()
             outputs, _ = model(inputs, None)
-
             outputs = outputs.reshape(-1, outputs.size(-1))
             targets = targets.reshape(-1)
-
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
-
             total_loss += loss.item()
             progress_bar.set_postfix({'Loss': loss.item()})
-
         avg_loss = total_loss / len(train_loader)
         train_losses.append(avg_loss)
 
@@ -45,12 +39,10 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
         val_loss /= len(val_loader)
         val_losses.append(val_loss)
         model.train()
-
         logging.info(f'Epoch {epoch+1}, Avg Train Loss: {avg_loss:.4f}, Avg Val Loss: {val_loss:.4f}')
-
     return train_losses, val_losses
 
-def generate_smiles(model, char_to_idx, idx_to_char, start_char='C', max_length=50):
+def generate_smiles(model, char_to_idx, idx_to_char, start_char='C', max_length=100):
     model.eval()
     device = next(model.parameters()).device  
     with torch.no_grad():
@@ -76,10 +68,8 @@ def evaluate_model(model, loader, criterion, device):
             inputs = batch[:, :-1].to(device)
             targets = batch[:, 1:].to(device)
             outputs, _ = model(inputs, None)
-
             outputs = outputs.reshape(-1, outputs.size(-1))
             targets = targets.reshape(-1)
-
             loss = criterion(outputs, targets)
             total_loss += loss.item()
     avg_loss = total_loss / len(loader)
