@@ -53,7 +53,7 @@ def main():
     gdb17_data = pd.read_csv('data/GDB17.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:1000]
+    selected_gdb17_smiles = gdb17_smiles[:50000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
     logging.info(f"Collected {len(valid_gdb17)} valid SMILES from GDB17 dataset")
 
@@ -109,14 +109,14 @@ def main():
 
     logging.info("Generating new SMILES...")
     new_smiles = []
-    for _ in tqdm(range(5000), desc="Generating SMILES"):
+    for _ in tqdm(range(2000), desc="Generating SMILES"):
         start_char = random.choices(start_char_list, weights=start_char_weights, k=1)[0]
-        smi = generate_smiles(clm_model, char_to_idx, idx_to_char, start_char=start_char, max_length=100)
+        smi = generate_smiles(clm_model, char_to_idx, idx_to_char, start_char=start_char, max_length=80)
         new_smiles.append(smi)
 
     # Save and validate results
-    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_27_02_2025.csv', index=False)
-    logging.info("Generated SMILES saved to 'data/generated_smiles_27_02_2025.csv'")
+    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_27_02_2025(2)c.csv', index=False)
+    logging.info("Generated SMILES saved to 'data/generated_smiles_27_02_2025(2).csv'")
 
     logging.info("Filtering valid and unique SMILES...")
     valid_new_smiles = []
@@ -128,8 +128,8 @@ def main():
             valid_new_smiles.append(smi)
     logging.info(f"Generated {len(valid_new_smiles)} valid and unique SMILES")
 
-    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_27_02_2025.csv', index=False)
-    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_27_02_2025.csv'")
+    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_27_02_2025(2).csv', index=False)
+    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_27_02_2025(2).csv'")
 
 if __name__ == "__main__":
     main()
