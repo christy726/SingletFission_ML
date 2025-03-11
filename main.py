@@ -53,7 +53,7 @@ def main():
     gdb17_data = pd.read_csv('data/GDB17.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:500]
+    selected_gdb17_smiles = gdb17_smiles[:50000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
     logging.info(f"Collected {len(valid_gdb17)} valid SMILES from GDB17")
 
@@ -83,7 +83,7 @@ def main():
 
     logging.info("Pre-training CLM on combined dataset...")
     clm_model = CLM(vocab_size=len(chars),embed_dim=128,hidden_dim=256,n_layers=3,dropout=0.2).to(device)
-    train_losses, val_losses = pretrain_clm(clm_model,combined_smiles,char_to_idx,device,epochs=2,batch_size=128,lr=0.001,seq_len=seq_len)
+    train_losses, val_losses = pretrain_clm(clm_model,combined_smiles,char_to_idx,device,epochs=5,batch_size=128,lr=0.001,seq_len=seq_len)
     
     logging.info("CLM pre-training complete")
     plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_learning_curves.png')
@@ -119,8 +119,8 @@ def main():
         new_smiles.extend(batch_smiles)
 
     # Save and validate results
-    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_27_02_2025.csv', index=False)
-    logging.info("Generated SMILES saved to 'data/generated_smiles_27_02_2025.csv'")
+    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_11_03_2025.csv', index=False)
+    logging.info("Generated SMILES saved to 'data/generated_smiles_11_03_2025.csv'")
     logging.info("Filtering valid and unique SMILES...")
     valid_new_smiles = []
     seen = set(valid_small_smiles)
@@ -130,8 +130,8 @@ def main():
             seen.add(smi)
             valid_new_smiles.append(smi)
     logging.info(f"Generated {len(valid_new_smiles)} valid and unique SMILES")
-    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_27_02_2025.csv', index=False)
-    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_27_02_2025.csv'")
+    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_11_03_2025.csv', index=False)
+    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_11_03_2025.csv'")
 
 if __name__ == "__main__":
     main()
