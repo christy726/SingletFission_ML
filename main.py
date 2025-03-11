@@ -53,7 +53,7 @@ def main():
     gdb17_data = pd.read_csv('data/GDB17.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:50000]
+    selected_gdb17_smiles = gdb17_smiles[:300000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
     logging.info(f"Collected {len(valid_gdb17)} valid SMILES from GDB17")
 
