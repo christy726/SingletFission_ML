@@ -84,7 +84,7 @@ def main():
 
     logging.info("Pre-training CLM on combined dataset...")
     clm_model = CLM(vocab_size=len(chars), embed_dim=128, hidden_dim=256, n_layers=3, dropout=0.2).to(device)
-    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=10, batch_size=128, lr=0.001, seq_len=seq_len)
+    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=15, batch_size=128, lr=0.001, seq_len=seq_len)
     logging.info("CLM pre-training complete")
     plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_learning_curves_13_03_2025.png')
 
@@ -100,7 +100,7 @@ def main():
     logging.info(f"Train set size: {len(train_smiles)}, Validation set size: {len(val_smiles)}")
 
     logging.info("Fine-tuning CLM on smaller dataset...")
-    train_losses, val_losses = finetune_clm(clm_model, train_smiles, char_to_idx, device, epochs=20, batch_size=32, lr=0.0001, seq_len=seq_len)
+    train_losses, val_losses = finetune_clm(clm_model, train_smiles, char_to_idx, device, epochs=30, batch_size=32, lr=0.0001, seq_len=seq_len)
     logging.info("CLM fine-tuning complete")
     plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_learning_curves_13_03_2025.png')
 
