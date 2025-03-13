@@ -53,7 +53,7 @@ def main():
     gdb17_data = pd.read_csv('data/GDB17.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:350000]
+    selected_gdb17_smiles = gdb17_smiles[:400000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
     logging.info(f"Collected {len(valid_gdb17)} valid SMILES from GDB17")
     
@@ -100,14 +100,14 @@ def main():
     # Pre-training
     clm_model = CLM(vocab_size=len(chars), embed_dim=128, hidden_dim=256, n_layers=3, dropout=0.2).to(device)
     train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, 
-                                           epochs=10, batch_size=64, lr=0.001, seq_len=seq_len)
+                                           epochs=15, batch_size=64, lr=0.001, seq_len=seq_len)
     plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_learning_curves_13_03_2025.png')
     
     # Fine-tuning
     valid_small_smiles = ['!' + smi for smi in valid_small_smiles]
     train_smiles, val_smiles = train_test_split(valid_small_smiles, test_size=0.1, random_state=42)
     train_losses, val_losses = finetune_clm(clm_model, train_smiles, char_to_idx, device, 
-                                           epochs=20, batch_size=32, lr=0.0001, seq_len=seq_len)
+                                           epochs=30, batch_size=32, lr=0.0001, seq_len=seq_len)
     plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_learning_curves_13_03_2025.png')
     
     # Evaluation
