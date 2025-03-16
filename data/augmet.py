@@ -6,9 +6,9 @@ import random
 from tqdm import tqdm
 import sys
 
-INPUT_FILE = "SMILE.csv"
-OUTPUT_FILE = "augmented_smiles.csv"
-TOTAL_TARGET = 200000
+INPUT_FILE = "D:\My_Computer\Meh!!!!!!!\workspace\VIT_LAB\SingletFission_ML\data\SMILE.csv"
+OUTPUT_FILE = "D:\My_Computer\Meh!!!!!!!\workspace\VIT_LAB\SingletFission_ML\data\augmented_smiles.csv"
+TOTAL_TARGET = 600000
 MAX_FOLDS = 8   
 FRAGMENT_BATCH_SIZE = 200   
 
