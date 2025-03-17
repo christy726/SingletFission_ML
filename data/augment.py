@@ -240,7 +240,7 @@ def generate_augmented_smiles(file_path, target_count=200000, max_folds=10, frag
 
 if __name__ == "__main__":
     start_time = time.time()
-    augmented_smis = generate_augmented_smiles('SMILE.csv', target_count=50000000, max_folds=10, fragment_multiplier=10)
+    augmented_smis = generate_augmented_smiles('SMILE.csv', target_count=25000000, max_folds=10, fragment_multiplier=10)
     end_time = time.time()
     print(f'Process completed in {end_time - start_time:.2f} seconds.')
 
