@@ -1,3 +1,4 @@
+
 import torch
 import logging
 from tqdm import tqdm
@@ -23,7 +24,6 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, e
             progress_bar.set_postfix({'Loss': loss.item()})
         avg_loss = total_loss / len(train_loader)
         train_losses.append(avg_loss)
-
         # Calculate validation loss
         model.eval()
         val_loss = 0
@@ -61,9 +61,10 @@ def generate_smiles_batch(model, char_to_idx, idx_to_char, start_chars, max_leng
         input_idx = torch.tensor(next_chars).unsqueeze(-1).to(device)
     return [''.join(s) for s in smiles]
 
-def evaluate_model(model, loader, criterion, device):
+def evaluate_model(model, loader, device):
     model.eval()
     total_loss = 0
+    criterion = torch.nn.CrossEntropyLoss(ignore_index=model.char_to_idx['<PAD>'])
     with torch.no_grad():
         for batch in tqdm(loader, desc="Evaluating", leave=False):
             inputs = batch[:, :-1].to(device)
@@ -75,4 +76,4 @@ def evaluate_model(model, loader, criterion, device):
             total_loss += loss.item()
     avg_loss = total_loss / len(loader)
     logging.info(f'Evaluation Avg Loss: {avg_loss:.4f}')
-    return {'avg_loss': avg_loss}
+    return avg_loss

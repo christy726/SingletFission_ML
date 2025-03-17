@@ -1,18 +1,20 @@
+
 import torch
 import torch.optim as optim
 from tqdm import tqdm
 from utils.dataset import SMILESDataset
 import logging
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 def pretrain_clm(model, smiles, char_to_idx, device, epochs=30, batch_size=128, lr=0.001, seq_len=100):
     dataset = SMILESDataset(smiles, char_to_idx, seq_len=seq_len)
     train_size = int(0.9 * len(dataset))
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, len(dataset) - train_size])
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, num_workers=4)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size*2, shuffle=False, pin_memory=True)
     criterion = torch.nn.CrossEntropyLoss(ignore_index=char_to_idx['<PAD>'])
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2, verbose=True)
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
@@ -36,7 +38,6 @@ def pretrain_clm(model, smiles, char_to_idx, device, epochs=30, batch_size=128, 
             progress_bar.set_postfix({'Loss': loss.item()})
         avg_loss = total_loss / len(train_loader)
         train_losses.append(avg_loss)
-
         # Calculate validation loss
         model.eval()
         val_loss = 0
@@ -70,11 +71,11 @@ def finetune_clm(model, smiles, char_to_idx, device, epochs=10, batch_size=32, l
     dataset = SMILESDataset(smiles, char_to_idx, seq_len=seq_len)
     train_size = int(0.9 * len(dataset))
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, len(dataset) - train_size])
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, num_workers=4)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size*2, shuffle=False, pin_memory=True)
     criterion = torch.nn.CrossEntropyLoss(ignore_index=char_to_idx['<PAD>'])
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2, verbose=True)
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
@@ -98,7 +99,6 @@ def finetune_clm(model, smiles, char_to_idx, device, epochs=10, batch_size=32, l
             progress_bar.set_postfix({'Loss': loss.item()})
         avg_loss = total_loss / len(train_loader)
         train_losses.append(avg_loss)
-
         # Calculate validation loss
         model.eval()
         val_loss = 0

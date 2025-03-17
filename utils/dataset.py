@@ -1,3 +1,4 @@
+
 import torch
 from torch.utils.data import Dataset
 
@@ -6,10 +7,10 @@ class SMILESDataset(Dataset):
         self.smiles = smiles
         self.char_to_idx = char_to_idx
         self.seq_len = seq_len
-
+    
     def __len__(self):
         return len(self.smiles)
-
+    
     def __getitem__(self, idx):
         smi = self.smiles[idx]
         idxs = [self.char_to_idx.get(c, self.char_to_idx['<PAD>']) for c in smi] + [self.char_to_idx['<EOS>']]
