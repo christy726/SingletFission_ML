@@ -50,12 +50,12 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f"Using device: {device}")
     
-    gdb17_data = pd.read_csv('data/GDB17.csv')
+    gdb17_data = pd.read_csv('data/augmented_SMILE_18_03_2025.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:400000]
+    selected_gdb17_smiles = gdb17_smiles[:240000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
-    logging.info(f"Loaded {len(valid_gdb17)} valid SMILES from GDB17")
+    logging.info(f"Loaded {len(valid_gdb17)} valid SMILES from Augmented dataset")
     
     combined_smiles = ['!' + smi for smi in valid_gdb17]
     start_chars = [smi[0] for smi in combined_smiles if len(smi) > 0]
