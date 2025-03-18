@@ -77,9 +77,9 @@ def main():
     
     logging.info("Pre-training CLM on 400K SMILES...")
     clm_model = CLM(vocab_size=len(chars), embed_dim=64, hidden_dim=128, n_layers=2, dropout=0.1).to(device)
-    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=30, batch_size=32, lr=0.0005, seq_len=seq_len)
+    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=10, batch_size=32, lr=0.0005, seq_len=seq_len)
     logging.info("CLM pre-training complete")
-    plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_18_03_2025.png')
+    plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_18_03_2025(2).png')
     
     logging.info("Loading smaller dataset for fine-tuning...")
     small_dataset = pd.read_csv('data/SMILE.csv')
@@ -91,9 +91,9 @@ def main():
     logging.info(f"Train set size: {len(train_smiles)}, Validation set size: {len(val_smiles)}")
     
     logging.info("Fine-tuning CLM on smaller dataset...")
-    train_losses, val_losses = finetune_clm(clm_model, train_smiles, char_to_idx, device, epochs=40, batch_size=16, lr=0.0001, seq_len=seq_len)
+    train_losses, val_losses = finetune_clm(clm_model, train_smiles, char_to_idx, device, epochs=15, batch_size=16, lr=0.0001, seq_len=seq_len)
     logging.info("CLM fine-tuning complete")
-    plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_18_03_2025.png')
+    plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_18_03_2025(2).png')
     
     logging.info("Evaluating CLM...")
     dataset = SMILESDataset(train_smiles, char_to_idx, seq_len=seq_len)
@@ -111,8 +111,8 @@ def main():
         batch_smiles = generate_smiles_batch(model=clm_model, char_to_idx=char_to_idx, idx_to_char=idx_to_char, start_chars=start_chars, max_length=seq_len)
         new_smiles.extend(batch_smiles)
     new_smiles = [smi[1:] for smi in new_smiles]
-    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smile_18_03_2025.csv', index=False)
-    logging.info("Generated SMILES saved to 'data/generated_smiles_18_03_2025.csv'")
+    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smile_18_03_2025(2).csv', index=False)
+    logging.info("Generated SMILES saved to 'data/generated_smiles_18_03_2025(2).csv'")
     
     logging.info("Filtering valid and unique SMILES....")
     valid_new_smiles = []
@@ -123,8 +123,8 @@ def main():
             seen.add(smi)
             valid_new_smiles.append(smi)
     logging.info(f"Generated {len(valid_new_smiles)} valid and unique SMILES")
-    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_18_03_2025.csv', index=False)
-    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_18_03_2025.csv'")
+    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_18_03_2025(2).csv', index=False)
+    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_18_03_2025(2).csv'")
 
 if __name__ == "__main__":
     main()
