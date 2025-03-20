@@ -1,4 +1,3 @@
-# File: main.py
 import torch
 import logging
 import pandas as pd
@@ -49,15 +48,23 @@ def plot_learning_curves(train_losses, val_losses, title, filename):
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f"Using device: {device}")
-    
-    gdb17_data = pd.read_csv('data/augmented_SMILE_18_03_2025.csv')
+
+    gdb17_data = pd.read_csv('data/GDB17.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:240000]
+    selected_gdb17_smiles = gdb17_smiles[:400000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
-    logging.info(f"Loaded {len(valid_gdb17)} valid SMILES from Augmented dataset")
-    
-    combined_smiles = ['!' + smi for smi in valid_gdb17]
+    logging.info(f"Collected {len(valid_gdb17)} valid SMILES from GDB17")
+
+    augmented_smiles = load_augmented_data('data/augmented.csv')
+    valid_augmented = fetch_valid_smiles(augmented_smiles)
+    logging.info(f"Collected {len(valid_augmented)} valid SMILES from augmented dataset")
+
+    combined_smiles = valid_gdb17 + valid_augmented
+    logging.info(f"Combined {len(combined_smiles)} valid SMILES")
+
+    combined_smiles = ['!' + smi for smi in combined_smiles]
+
     start_chars = [smi[0] for smi in combined_smiles if len(smi) > 0]
     start_char_counts = {}
     for c in start_chars:
@@ -65,56 +72,60 @@ def main():
     total_start = len(start_chars)
     start_char_list = list(start_char_counts.keys())
     start_char_weights = [count/total_start for count in start_char_counts.values()]
-    
+
     chars = sorted(list(set(''.join(combined_smiles)))) + ['<PAD>', '<EOS>']
     logging.info(f"Vocabulary size: {len(chars)}")
     char_to_idx = {c: i for i, c in enumerate(chars)}
     idx_to_char = {i: c for i, c in enumerate(chars)}
-    
+
     seq_lengths = [len(smi) for smi in combined_smiles]
     seq_len = int(np.percentile(seq_lengths, 95)) + 1  
     logging.info(f"Determined sequence length: {seq_len}")
-    
-    logging.info("Pre-training CLM on 400K SMILES...")
-    clm_model = CLM(vocab_size=len(chars), embed_dim=64, hidden_dim=128, n_layers=2, dropout=0.1).to(device)
-    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=10, batch_size=32, lr=0.0005, seq_len=seq_len)
+
+    logging.info("Pre-training CLM on combined dataset...")
+    clm_model = CLM(vocab_size=len(chars), embed_dim=128, hidden_dim=256, n_layers=3, dropout=0.2).to(device)
+    train_losses, val_losses = pretrain_clm(clm_model, combined_smiles, char_to_idx, device, epochs=15, batch_size=128, lr=0.001, seq_len=seq_len)
     logging.info("CLM pre-training complete")
-    plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_18_03_2025(2).png')
-    
+    plot_learning_curves(train_losses, val_losses, 'Pre-training Learning Curves', 'pretraining_learning_curves_13_03_2025.png')
+
     logging.info("Loading smaller dataset for fine-tuning...")
     small_dataset = pd.read_csv('data/SMILE.csv')
     small_smiles = small_dataset['SMILES'].tolist()
     valid_small_smiles = fetch_valid_smiles(small_smiles)
     logging.info(f"Loaded {len(valid_small_smiles)} valid SMILES from smaller dataset")
+
     valid_small_smiles = ['!' + smi for smi in valid_small_smiles]
+
     train_smiles, val_smiles = train_test_split(valid_small_smiles, test_size=0.1, random_state=42)
     logging.info(f"Train set size: {len(train_smiles)}, Validation set size: {len(val_smiles)}")
-    
+
     logging.info("Fine-tuning CLM on smaller dataset...")
-    train_losses, val_losses = finetune_clm(clm_model, train_smiles, char_to_idx, device, epochs=15, batch_size=16, lr=0.0001, seq_len=seq_len)
+    train_losses, val_losses = finetune_clm(clm_model, train_smiles, char_to_idx, device, epochs=30, batch_size=32, lr=0.0001, seq_len=seq_len)
     logging.info("CLM fine-tuning complete")
-    plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_18_03_2025(2).png')
-    
+    plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_learning_curves_13_03_2025.png')
+
     logging.info("Evaluating CLM...")
     dataset = SMILESDataset(train_smiles, char_to_idx, seq_len=seq_len)
-    loader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=False, num_workers=0, pin_memory=True)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True, num_workers=4)
     criterion = torch.nn.CrossEntropyLoss(ignore_index=char_to_idx['<PAD>'])
-    eval_loss = evaluate_model(model=clm_model, loader=loader, criterion=criterion, device=device, char_to_idx=char_to_idx)
-    logging.info(f"Evaluation Loss: {eval_loss['avg_loss']:.4f}")
-    
+    evaluate_model(clm_model, loader, criterion, device)
+    logging.info("Evaluation complete")
+
     logging.info("Generating new SMILES...")
     batch_size = 100  
     num_batches = 60  
     new_smiles = []
     for _ in tqdm(range(num_batches), desc="Generating SMILES"):
         start_chars = random.choices(start_char_list, weights=start_char_weights, k=batch_size)
-        batch_smiles = generate_smiles_batch(model=clm_model, char_to_idx=char_to_idx, idx_to_char=idx_to_char, start_chars=start_chars, max_length=seq_len)
+        batch_smiles = generate_smiles_batch(clm_model, char_to_idx, idx_to_char, start_chars, max_length=seq_len)
         new_smiles.extend(batch_smiles)
+        
     new_smiles = [smi[1:] for smi in new_smiles]
-    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smile_18_03_2025(2).csv', index=False)
-    logging.info("Generated SMILES saved to 'data/generated_smiles_18_03_2025(2).csv'")
-    
-    logging.info("Filtering valid and unique SMILES....")
+
+    pd.DataFrame(new_smiles, columns=['SMILES']).to_csv('data/generated_smiles_13_03_2025(2).csv', index=False)
+    logging.info("Generated SMILES saved to 'data/generated_smiles_13_03_2025(2).csv'")
+
+    logging.info("Filtering valid and unique SMILES...")
     valid_new_smiles = []
     seen = set(valid_small_smiles)
     for smi in new_smiles:
@@ -123,8 +134,8 @@ def main():
             seen.add(smi)
             valid_new_smiles.append(smi)
     logging.info(f"Generated {len(valid_new_smiles)} valid and unique SMILES")
-    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_18_03_2025(2).csv', index=False)
-    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_18_03_2025(2).csv'")
+    pd.DataFrame(valid_new_smiles, columns=['SMILES']).to_csv('data/valid_unique_smiles_13_03_2025(2).csv', index=False)
+    logging.info("Valid and unique SMILES saved to 'data/valid_unique_smiles_13_03_2025(2).csv'")
 
 if __name__ == "__main__":
     main()
