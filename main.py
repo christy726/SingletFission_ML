@@ -53,12 +53,12 @@ def main():
     gdb17_data = pd.read_csv('data/GDB17.csv')
     gdb17_smiles = gdb17_data['SMILES'].tolist()
     random.shuffle(gdb17_smiles)
-    selected_gdb17_smiles = gdb17_smiles[:50000]
+    selected_gdb17_smiles = gdb17_smiles[:100000]
     valid_gdb17 = fetch_valid_smiles(selected_gdb17_smiles)
     logging.info(f"Collected {len(valid_gdb17)} valid SMILES from GDB17 dataset")
 
     logging.info("Loading augmented dataset...")
-    augmented_smiles = load_augmented_data('data/augmented.csv')
+    augmented_smiles = load_augmented_data('data/augmented_SMILE.csv')
     valid_augmented = fetch_valid_smiles(augmented_smiles)
     logging.info(f"Collected {len(valid_augmented)} valid SMILES from augmented dataset")
 
@@ -96,7 +96,7 @@ def main():
     logging.info(f"Loaded {len(valid_small_smiles)} valid SMILES from smaller dataset")
 
     logging.info("Fine-tuning CLM on smaller dataset...")
-    train_losses, val_losses = finetune_clm(clm_model, valid_small_smiles, char_to_idx, device, epochs=20, batch_size=32, lr=0.0001)
+    train_losses, val_losses = finetune_clm(clm_model, valid_small_smiles, char_to_idx, device, epochs=15, batch_size=32, lr=0.0001)
     logging.info("CLM fine-tuning complete")
     plot_learning_curves(train_losses, val_losses, 'Fine-tuning Learning Curves', 'finetuning_learning_curves.png')
 
